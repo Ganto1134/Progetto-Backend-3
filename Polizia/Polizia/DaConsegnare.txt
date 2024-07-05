@@ -1,0 +1,196 @@
+Creo la prima tabella
+
+CREATE TABLE [dbo].[ANAGRAFICHE]
+(
+	IdAnagrafica INT NOT NULL PRIMARY KEY,
+	Cognome VARCHAR(50),
+    Nome VARCHAR(50),
+    Indirizzo VARCHAR(80),
+    Città VARCHAR(58),
+    CAP VARCHAR(10),
+    Cod_Fisc VARCHAR(16)
+)
+
+Seconda tabella
+
+CREATE TABLE [dbo].[TIPI_VIOLAZIONI]
+(
+	IdViolazione INT NOT NULL PRIMARY KEY,
+    Descrizione VARCHAR(255)
+)
+
+creazione terza tabella con attenuante e aggravante che per aumentare o diminuire l'importo
+
+CREATE TABLE [dbo].[VERBALI]
+(
+    IdVerbale INT NOT NULL PRIMARY KEY,
+    IdAnagrafica INT NOT NULL,
+    IdViolazione INT NOT NULL,
+    DataViolazione DATETIME2 NOT NULL,
+    IndirizzoViolazione VARCHAR(80) NOT NULL,
+    Nominativo_Agente VARCHAR(50) NOT NULL,
+    DataTrascrizioneVerbale DATE NOT NULL,
+    Importo DECIMAL(10, 2) NOT NULL,
+    DecurtamentoPunti INT NULL,
+    Attenuante BIT DEFAULT 0,
+    Aggravante BIT DEFAULT 0,
+    FOREIGN KEY (IdAnagrafica) REFERENCES ANAGRAFICHE(IdAnagrafica),
+    FOREIGN KEY (IdViolazione) REFERENCES TIPI_VIOLAZIONI(IdViolazione),
+    CHECK (NOT (Attenuante = 1 AND Aggravante = 1))
+)
+
+Trigger per vedere se aumentare o diminuire l'importo 
+
+CREATE TRIGGER trg_calcolo_importo
+ON VERBALI
+INSTEAD OF INSERT
+AS
+BEGIN
+    INSERT INTO VERBALI (IdVerbale, IdAnagrafica, IdViolazione, DataViolazione, IndirizzoViolazione, Nominativo_Agente, DataTrascrizioneVerbale, Importo, DecurtamentoPunti, Attenuante, Aggravante)
+    SELECT
+        IdVerbale,
+        IdAnagrafica,
+        IdViolazione,
+        DataViolazione,
+        IndirizzoViolazione,
+        Nominativo_Agente,
+        DataTrascrizioneVerbale,
+        CASE
+            WHEN Attenuante = 1 THEN Importo * 0.85
+            WHEN Aggravante = 1 THEN Importo * 1.15
+            ELSE Importo
+        END,
+        DecurtamentoPunti,
+        Attenuante,
+        Aggravante
+    FROM inserted;
+END;
+
+DELIMITER ;
+
+inserimento dati prima tabella 
+
+INSERT INTO [dbo].[ANAGRAFICHE] (IdAnagrafica, Cognome, Nome, Indirizzo, Città, CAP, Cod_Fisc)
+VALUES
+(1, 'De Santis', 'Alessandro', 'Via della Libertà 1', 'Milano', '20100', 'DSNLSN80A01H501Z'),
+(2, 'Gonzalez', 'Maria', 'Via della Pace 2', 'Roma', '00100', 'GNZMRA81B02L682Z'),
+(3, 'Li Wei', 'Chang', 'Corso della Vittoria 3', 'Napoli', '80100', 'LWCHNG82C03F839Z'),
+(4, 'Angelis', 'Siobhan', 'Piazza della Repubblica 4', 'Torino', '10100', 'OCNSBN83D04L219Z'),
+(5, 'Kowalski', 'Jan', 'Via del Popolo 5', 'Firenze', '50100', 'KWLJAN84E05F205Z'),
+(6, 'Smith', 'Jennifer', 'Viale Europa 6', 'Bologna', '40100', 'SMTJNN85F06B225Z'),
+(7, 'Hernandez', 'Carlos', 'Via della Pace 7', 'Genova', '16100', 'HRNCRL86G07A227Z'),
+(8, 'Dubois', 'Elise', 'Via della Scienza 8', 'Palermo', '90100', 'DBELIS87H08P211Z'),
+(9, 'Rossi', 'Paolo', 'Via Veneto 9', 'Verona', '37100', 'RSSPLA88I09L871Z'),
+(10, 'Bianchi', 'Marta', 'Via Mazzini 10', 'Trieste', '34100', 'BNCMRT89J10T205Z');
+
+inserimento dati seconda tabella 
+
+INSERT INTO [dbo].[TIPI_VIOLAZIONI] (IdViolazione, Descrizione)
+VALUES
+(1, 'Eccesso di velocità'),
+(2, 'Parcheggio vietato'),
+(3, 'Guida in stato di ebbrezza'),
+(4, 'Uso del cellulare alla guida'),
+(5, 'Mancato uso delle cinture di sicurezza'),
+(6, 'Passaggio con il rosso'),
+(7, 'Sorpasso vietato'),
+(8, 'Guida senza patente'),
+(9, 'Assicurazione scaduta'),
+(10, 'Guida contromano');
+
+
+inserimento dati terza tabella 
+
+INSERT INTO [dbo].[VERBALI] (IdVerbale, IdAnagrafica, IdViolazione, DataViolazione, IndirizzoViolazione, Nominativo_Agente, DataTrascrizioneVerbale, Importo, DecurtamentoPunti, Attenuante, Aggravante)
+VALUES
+(1, 1, 1, '2024-01-15 14:30:00', 'Via della Libertà 1', 'Agente Moretti', '2024-01-16', 150.00, 3, 0, 0),
+(2, 2, 2, '2024-02-20 09:00:00', 'Via della Pace 2', 'Agente Moro', '2024-02-21', 50.00, 0, 0, 0),
+(3, 3, 3, '2024-03-25 22:15:00', 'Corso della Vittoria 3', 'Agente Rossi', '2024-03-26', 500.00, 10, 0, 1),
+(4, 4, 4, '2024-04-10 08:45:00', 'Piazza della Repubblica 4', 'Agente Diamantini', '2024-04-11', 200.00, 5, 0, 0),
+(5, 5, 5, '2024-05-05 12:00:00', 'Via del Popolo 5', 'Agente Cutruneo', '2024-05-06', 100.00, 0, 1, 0),
+(6, 6, 6, '2024-06-15 17:30:00', 'Viale Europa 6', 'Agente Gantolea', '2024-06-16', 250.00, 6, 0, 1),
+(7, 7, 7, '2024-07-20 11:45:00', 'Via della Pace 7', 'Agente Attanasio', '2024-07-21', 300.00, 7, 0, 0),
+(8, 8, 8, '2024-08-25 19:00:00', 'Via della Scienza 8', 'Agente Bianchi', '2024-08-26', 400.00, 8, 0, 1),
+(9, 9, 9, '2024-09-30 13:30:00', 'Via Veneto 9', 'Agente Boscolo', '2024-10-01', 150.00, 0, 0, 0),
+(10, 10, 10, '2024-10-15 16:00:00', 'Via Mazzini 10', 'Agente Esposito', '2024-10-16', 350.00, 9, 1, 0);
+
+1. Conteggio dei verbali trascritti,
+
+SELECT 
+COUNT(*) AS TotaleVerbali
+FROM VERBALI;
+
+2. Conteggio dei verbali trascritti raggruppati per anagrafe,
+
+SELECT A.Cognome, A.Nome, COUNT(V.IdVerbale) AS NumeroVerbali
+FROM VERBALI AS V
+JOIN ANAGRAFICHE AS A ON V.IdAnagrafica = A.IdAnagrafica
+GROUP BY A.Cognome, A.Nome;
+
+3. Conteggio dei verbali trascritti raggruppati per tipo di violazione,
+
+SELECT T.Descrizione, COUNT(V.IdVerbale) AS NumeroVerbali
+FROM VERBALI AS V
+JOIN TIPI_VIOLAZIONI AS T ON V.IdViolazione = T.IdViolazione
+GROUP BY T.Descrizione;
+
+4. Totale dei punti decurtati per ogni anagrafe,
+
+SELECT A.Cognome, A.Nome, SUM(V.DecurtamentoPunti) AS TotalePuntiDecurtati
+FROM VERBALI AS V
+JOIN ANAGRAFICHE AS A ON V.IdAnagrafica = A.IdAnagrafica
+GROUP BY A.Cognome, A.Nome;
+
+5. Cognome, Nome, Data violazione, Indirizzo violazione, importo e punti decurtati per tutti gli anagrafici residenti a Palermo,
+
+SELECT A.Cognome, A.Nome, V.DataViolazione, V.IndirizzoViolazione, V.Importo, V.DecurtamentoPunti
+FROM VERBALI AS V
+JOIN ANAGRAFICHE AS A ON V.IdAnagrafica = A.IdAnagrafica
+WHERE A.Città = 'Palermo';
+
+6. Cognome, Nome, Indirizzo, Data violazione, importo e punti decurtati per le violazioni fatte tra il febbraio 2009 e luglio 2009,
+
+SELECT A.Cognome, A.Nome, A.Indirizzo, V.DataViolazione, V.Importo, V.DecurtamentoPunti
+FROM VERBALI AS V
+JOIN ANAGRAFICHE AS A ON V.IdAnagrafica = A.IdAnagrafica
+WHERE V.DataViolazione BETWEEN '2009-02-01' AND '2009-07-31';
+
+7. Totale degli importi per ogni anagrafico,
+
+SELECT A.Cognome, A.Nome, SUM(V.Importo) AS TotaleImporti
+FROM VERBALI AS V
+JOIN ANAGRAFICHE AS A ON V.IdAnagrafica = A.IdAnagrafica
+GROUP BY A.Cognome, A.Nome;
+
+8. Visualizzazione di tutti gli anagrafici residenti a Palermo,
+
+SELECT *
+FROM ANAGRAFICHE
+WHERE Città = 'Palermo';
+
+9. Query che visualizzi Data violazione, Importo e decurta mento punti relativi ad una certa data,
+
+SELECT DataViolazione, Importo, DecurtamentoPunti
+FROM VERBALI
+WHERE CAST(DataViolazione AS DATE) = '2024-07-20';    Da cambiare data in base a cosa si cerca
+
+10. Conteggio delle violazioni contestate raggruppate per Nominativo dell’agente di Polizia,
+
+SELECT Nominativo_Agente, 
+COUNT(IdVerbale) AS NumeroViolazioni
+FROM VERBALI
+GROUP BY Nominativo_Agente;
+
+11. Cognome, Nome, Indirizzo, Data violazione, Importo e punti decurtati per tutte le violazioni che superino il decurtamento di 5 punti,
+
+SELECT A.Cognome, A.Nome, A.Indirizzo, V.DataViolazione, V.Importo, V.DecurtamentoPunti
+FROM VERBALI AS V
+JOIN ANAGRAFICHE AS A ON V.IdAnagrafica = A.IdAnagrafica
+WHERE V.DecurtamentoPunti > 5;
+
+12. Cognome, Nome, Indirizzo, Data violazione, Importo e punti decurtati per tutte le violazioni che superino l’importo di 400 euro.
+
+SELECT A.Cognome, A.Nome, A.Indirizzo, V.DataViolazione, V.Importo, V.DecurtamentoPunti
+FROM VERBALI AS V
+JOIN ANAGRAFICHE AS A ON V.IdAnagrafica = A.IdAnagrafica
+WHERE V.Importo > 400.00;
