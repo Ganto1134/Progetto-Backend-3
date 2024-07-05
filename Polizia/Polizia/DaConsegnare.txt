@@ -3,12 +3,12 @@ Creo la prima tabella
 CREATE TABLE [dbo].[ANAGRAFICHE]
 (
 	IdAnagrafica INT NOT NULL PRIMARY KEY,
-	Cognome VARCHAR(50),
-    Nome VARCHAR(50),
-    Indirizzo VARCHAR(80),
-    Città VARCHAR(58),
-    CAP VARCHAR(10),
-    Cod_Fisc VARCHAR(16)
+	Cognome NVARCHAR(50),
+    Nome NVARCHAR(50),
+    Indirizzo NVARCHAR(80),
+    Città NVARCHAR(58),
+    CAP NVARCHAR(10),
+    Cod_Fisc NVARCHAR(16)
 )
 
 Seconda tabella
@@ -16,7 +16,7 @@ Seconda tabella
 CREATE TABLE [dbo].[TIPI_VIOLAZIONI]
 (
 	IdViolazione INT NOT NULL PRIMARY KEY,
-    Descrizione VARCHAR(255)
+    Descrizione NVARCHAR(255)
 )
 
 creazione terza tabella con attenuante e aggravante che per aumentare o diminuire l'importo
@@ -27,8 +27,8 @@ CREATE TABLE [dbo].[VERBALI]
     IdAnagrafica INT NOT NULL,
     IdViolazione INT NOT NULL,
     DataViolazione DATETIME2 NOT NULL,
-    IndirizzoViolazione VARCHAR(80) NOT NULL,
-    Nominativo_Agente VARCHAR(50) NOT NULL,
+    IndirizzoViolazione NVARCHAR(80) NOT NULL,
+    Nominativo_Agente NVARCHAR(50) NOT NULL,
     DataTrascrizioneVerbale DATE NOT NULL,
     Importo DECIMAL(10, 2) NOT NULL,
     DecurtamentoPunti INT NULL,
